@@ -4,6 +4,7 @@ import numpy as np
 from numpy import unique
 from sklearn.preprocessing import StandardScaler
 
+
 config = configparser.ConfigParser()
 config.read('config.ini')
 config = config['default']
@@ -20,7 +21,7 @@ overflow_columns = ['MDEC-22', 'MDEC-23', 'MDEC-33', 'MDEO-11', 'MDEC-12', 'MDEC
 def filter_columns_file():
     data_file = pd.read_csv(filepath_or_buffer=filepath_raw, delimiter=',')
 
-    for each_columns in data_file.loc[:, ~data_file.columns.isin(['FAST form', 'SMILE form'])]:
+    for each_columns in data_file.loc[:, ~data_file.columns.isin(['FASTA form', 'SMILE form'])]:
         data_file[each_columns].replace('None', np.nan, inplace=True)
 
         if(data_file[each_columns] == data_file[each_columns][0]).all() or data_file[each_columns].isnull().all():
@@ -49,7 +50,7 @@ def mean_result_with_nan(each_columns, data_file):
 def data_standardization():
     filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
 
-    for each_columns in filter_data_file.loc[:, ~filter_data_file.columns.isin(['FAST form', 'SMILE form'])]:
+    for each_columns in filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form'])]:
         all_values_unscale = filter_data_file[each_columns].values
         scalar = StandardScaler()
         scaled_data = scalar.fit_transform(all_values_unscale.reshape(-1, 1))
@@ -68,7 +69,7 @@ def drop_overflow_columns(data_file):
 def unique_value():
     filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
 
-    for each_columns in filter_data_file.loc[:, ~filter_data_file.columns.isin(['FAST form', 'SMILE form'])]:
+    for each_columns in filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form'])]:
         index = filter_data_file.columns.get_loc(each_columns)
         number_unique_value = len(unique(filter_data_file.iloc[:, index]))
 

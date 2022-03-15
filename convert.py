@@ -21,7 +21,7 @@ def prepare_columns():
     calc = Calculator(descriptors, ignore_3D=True)
     peptides_name_columns = calc._name_dict.keys()
 
-    headerList = ['FAST form', 'SMILE form']
+    headerList = ['FASTA form', 'SMILE form']
     for i in peptides_name_columns:
         headerList.append(i)
 
