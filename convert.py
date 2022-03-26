@@ -24,6 +24,7 @@ def prepare_columns():
     headerList = ['FASTA form', 'SMILE form']
     for i in peptides_name_columns:
         headerList.append(i)
+    headerList.append("result")
 
     transform_data_file = pd.DataFrame(columns=headerList)
     transform_data_file.to_csv(output_raw, index=False, sep=',')
@@ -33,12 +34,12 @@ def prepare_columns():
 def transform_to_smile():
     prepare_columns()
 
-    peptides = data_file["sequence"].values
+    df_temp = data_file.iloc[:, 0:2]
     with open(output_raw, 'a') as transform_data:
-        for peptide in peptides:
+        for peptide, result in df_temp.itertuples(index=False):
             smile = Chem.MolToSmiles(Chem.MolFromFASTA(peptide))
             calculate_descriptors = calculation_all_descriptors(smile)
-            transform_data.write(peptide + ',' + smile + ',' + calculate_descriptors + '\n')
+            transform_data.write(peptide + ',' + smile + ',' + calculate_descriptors + ',' + str(result) + '\n')
     transform_data.close()
     return
 
@@ -46,6 +47,6 @@ def transform_to_smile():
 def calculation_all_descriptors(smile):
     calc = Calculator(descriptors, ignore_3D=True)
     all_descriptors = calc(Chem.MolFromSmiles(smile)).fill_missing(value=None)
-    print(all_descriptors)
+
     result = ','.join([str(elem) for elem in all_descriptors.values()])
-    return(result)
+    return result
