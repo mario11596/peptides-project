@@ -4,6 +4,8 @@ import numpy as np
 from numpy import unique
 from sklearn.preprocessing import StandardScaler
 from constants import Constants
+from scipy.stats import kendalltau
+
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -93,5 +95,29 @@ def unique_value():
     return
 
 
+# select features with high correlation and removed features with high Kendall's tau
+def feature_selection_kendall_model():
+    filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
+    all_dataset = filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]
 
+    result = filter_data_file["result"].values
 
+    feature_drop = []
+    calculate_all_correlation = all_dataset.corr().abs()
+
+    for row_keys, row_values in calculate_all_correlation.iterrows():
+        for columns_keys, columns_values in row_values.iteritems():
+            if columns_values > Constants.CORRELATION_LIMIT:
+                tau1, p_value1 = kendalltau(filter_data_file[columns_keys].values, result)
+                tau2, p_value2 = kendalltau(filter_data_file[row_keys].values, result)
+
+                if tau1 < tau2:
+                    feature_drop.append(str(columns_keys))
+                elif tau1 > tau2:
+                    feature_drop.append(str(row_keys))
+
+    feature_drop = list(set(feature_drop))
+
+    print("Number of removed columns with high correlation is: " + str(len(feature_drop)))
+    filter_data_file.drop(feature_drop, axis=1, inplace=True)
+    filter_data_file.to_csv(filter_file, index=False, sep=',')
