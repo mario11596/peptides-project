@@ -15,6 +15,7 @@ config = config['default']
 filepath_raw = config['output_location']
 
 filter_file = config['output_location-filter']
+
 # remove all columns which results are overflow
 overflow_columns = ['MDEC-22', 'MDEC-23', 'MDEC-33', 'MDEO-11', 'MDEC-12', 'MDEC-13', 'MDEN-12', 'MDEN-22', 'MDEC-24', 'VSA_EState9']
 
@@ -105,8 +106,14 @@ def feature_selection_kendall_model():
     feature_drop = []
     calculate_all_correlation = all_dataset.corr().abs()
 
+    calculate_all_correlation.values[np.tril_indices_from(calculate_all_correlation.values)] = np.nan
+    print(calculate_all_correlation)
+
+    index = 0
+
     for row_keys, row_values in calculate_all_correlation.iterrows():
-        for columns_keys, columns_values in row_values.iteritems():
+        index += 1
+        for i, (columns_keys, columns_values) in enumerate(row_values.items(), index):
             if columns_values > Constants.CORRELATION_LIMIT:
                 tau1, p_value1 = kendalltau(filter_data_file[columns_keys].values, result)
                 tau2, p_value2 = kendalltau(filter_data_file[row_keys].values, result)
@@ -121,3 +128,4 @@ def feature_selection_kendall_model():
     print("Number of removed columns with high correlation is: " + str(len(feature_drop)))
     filter_data_file.drop(feature_drop, axis=1, inplace=True)
     filter_data_file.to_csv(filter_file, index=False, sep=',')
+    return
