@@ -2,7 +2,7 @@ from rdkit import Chem
 import configparser
 from mordred import Calculator, descriptors
 import pandas as pd
-
+from constants import Constants
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -10,7 +10,7 @@ config = config['default']
 
 # input original file
 filepath_raw = config['peptides_filepath_raw']
-header = ['sequence', 'label']
+header = [Constants.SEQUENCES, Constants.LABELS]
 data_file = pd.read_csv(filepath_or_buffer=filepath_raw, header=0, delimiter=',')
 
 # file with peptides in SMILE annotation, prepared all columns
@@ -19,7 +19,7 @@ output_raw = config['output_location']
 
 def prepare_columns():
     calc = Calculator(descriptors, ignore_3D=True)
-    peptides_name_columns = calc._name_dict.keys()
+    peptides_name_columns = calc.name_dict.keys()
 
     headerList = ['FASTA form', 'SMILE form']
     for i in peptides_name_columns:
@@ -47,6 +47,6 @@ def transform_to_smile():
 def calculation_all_descriptors(smile):
     calc = Calculator(descriptors, ignore_3D=True)
     all_descriptors = calc(Chem.MolFromSmiles(smile)).fill_missing(value=None)
-
+    print(all_descriptors)
     result = ','.join([str(elem) for elem in all_descriptors.values()])
     return result

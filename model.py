@@ -1,13 +1,11 @@
 import configparser
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import LeaveOneOut
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score
-from numpy import mean
-from numpy import std
+from constants import Constants
+from sklearn.model_selection import KFold
+from sklearn.model_selection import train_test_split
 import joblib
 
 config = configparser.ConfigParser()
@@ -16,19 +14,19 @@ config = config['default']
 
 filter_file = config['output_location-filter']
 
-def train_model():
+
+def train_model_catalytic():
     filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
 
     all_data_feature = filter_data_file.drop(labels=['FASTA form', 'SMILE form', 'result'], axis=1)
-    all_data_feature = all_data_feature.values
-    target = filter_data_file["result"].values
+    target = filter_data_file["result"]
 
-    model = RandomForestClassifier(n_estimators=100)
+    model = RandomForestClassifier(n_estimators=Constants.N_ESTIMATORS, max_features=Constants.MAX_FEATURES, min_samples_leaf=Constants.MIN_SAMPLES_LEAF)
     loo_data = LeaveOneOut()
 
-    scores = cross_val_score(model, all_data_feature, target, scoring="accuracy", cv=loo_data)
+    scores = cross_val_score(model, all_data_feature, target, scoring="accuracy", cv=loo_data).mean()
 
-    print('Accuracy: ' + str(mean(scores)))
+    print('Accuracy: ' + str(scores))
 
     """
     tmp_results = []
@@ -48,3 +46,35 @@ def train_model():
     acc = accuracy_score(tmp_results, target_results)
     print('Accuracy: %f' %acc)
     """
+
+
+def train_model_amp():
+    filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
+
+    all_data_feature = filter_data_file.drop(columns=['FASTA form', 'SMILE form', 'result'], axis=1)
+    target = filter_data_file["result"]
+
+    model = RandomForestClassifier(n_estimators=Constants.N_ESTIMATORS, max_features=Constants.MAX_FEATURES,
+                                   min_samples_leaf=Constants.MIN_SAMPLES_LEAF)
+    ten_fold_cv = KFold(n_splits=10, shuffle=True, random_state=None)
+
+    scores = cross_val_score(model, all_data_feature, target, scoring="accuracy", cv=ten_fold_cv).mean()
+
+    print('Accuracy: ' + str(scores))
+
+    """
+    x_train, x_test, y_train, y_test = train_test_split(all_data_feature, target, test_size=0.25, shuffle=True)
+    model = RandomForestClassifier(n_estimators=Constants.N_ESTIMATORS, max_features=Constants.MAX_FEATURES,
+                                   min_samples_leaf=Constants.MIN_SAMPLES_LEAF)
+    model_random_forest = model.fit(x_train, y_train)
+    ten_fold = KFold(n_splits=10)
+
+    scores = cross_val_score(model_random_forest, x_train, y_train, scoring="accuracy", cv=ten_fold).mean()
+    print(scores)
+
+    scores1 = cross_val_score(model_random_forest, x_test, y_test, scoring="accuracy", cv=ten_fold).mean()
+    print(scores1)
+    -- 92 % na train
+    -- 89 % na test
+    """
+

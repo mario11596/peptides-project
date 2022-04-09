@@ -24,8 +24,9 @@ overflow_columns = ['MDEC-22', 'MDEC-23', 'MDEC-33', 'MDEO-11', 'MDEC-12', 'MDEC
 def filter_columns_file():
     constat_column = 0
     null_to_mean = 0
-    data_file = pd.read_csv(filepath_or_buffer=filepath_raw, delimiter=',')
+    data_file = pd.read_csv(filepath_or_buffer=filepath_raw, delimiter=',', low_memory=False)
 
+    data_file = data_file.replace([np.inf, -np.inf], np.nan)
     for each_columns in data_file.loc[:, ~data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]:
         data_file[each_columns].replace('None', np.nan, inplace=True)
 
@@ -88,11 +89,12 @@ def unique_value():
             low_unique_value += 1
             filter_data_file.drop(each_columns, axis=1, inplace=True)
 
-    same_columns = filter_data_file.duplicated().sum()
-    filter_data_file.drop_duplicates(keep='first')
+    #drop columns with same value in FASTA form and result
+    same_rows = filter_data_file.duplicated(subset=['FASTA form', 'result']).sum()
+    filter_data_file.drop_duplicates(keep='first', subset=['FASTA form', 'result'], inplace=True)
     filter_data_file.to_csv(filter_file, index=False, sep=',')
     print("Number of columns with low unique values: " + str(low_unique_value))
-    print("Number of same columns: " + str(same_columns))
+    print("Number of same columns: " + str(same_rows))
     return
 
 
