@@ -94,7 +94,7 @@ def unique_value():
     filter_data_file.drop_duplicates(keep='first', subset=['FASTA form', 'result'], inplace=True)
     filter_data_file.to_csv(filter_file, index=False, sep=',')
     print("Number of columns with low unique values: " + str(low_unique_value))
-    print("Number of same columns: " + str(same_rows))
+    print("Number of same rows: " + str(same_rows))
     return
 
 

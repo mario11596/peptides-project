@@ -7,3 +7,5 @@ class Constants:
     MIN_SAMPLES_LEAF = 6
     SEQUENCES = 'sequence'
     LABELS = 'label'
+    CATALYTIC_NAME = 'catalytic'
+    AMP_NAME = 'AMP'
