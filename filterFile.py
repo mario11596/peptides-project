@@ -1,6 +1,10 @@
 import configparser
+from datetime import timedelta
+from time import process_time
+
 import pandas as pd
 import numpy as np
+from matplotlib import pyplot as plt
 from numpy import unique
 from sklearn.preprocessing import StandardScaler
 from constants import Constants
@@ -106,7 +110,9 @@ def feature_selection_kendall_model():
     result = filter_data_file["result"].values
 
     feature_drop = []
-    calculate_all_correlation = all_dataset.corr().abs()
+    calculate_all_correlation = all_dataset.corr()
+
+    start = process_time()
 
     calculate_all_correlation.values[np.tril_indices_from(calculate_all_correlation.values)] = np.nan
     print(calculate_all_correlation)
@@ -116,7 +122,7 @@ def feature_selection_kendall_model():
     for row_keys, row_values in calculate_all_correlation.iterrows():
         index += 1
         for i, (columns_keys, columns_values) in enumerate(row_values.items(), index):
-            if columns_values > Constants.CORRELATION_LIMIT:
+            if columns_values >= Constants.CORRELATION_LIMIT:
                 tau1, p_value1 = kendalltau(filter_data_file[columns_keys].values, result)
                 tau2, p_value2 = kendalltau(filter_data_file[row_keys].values, result)
 
@@ -125,9 +131,11 @@ def feature_selection_kendall_model():
                 elif tau1 > tau2:
                     feature_drop.append(str(row_keys))
 
+    end = process_time()
     feature_drop = list(set(feature_drop))
 
     print("Number of removed columns with high correlation is: " + str(len(feature_drop)))
+    print(f'Time : {timedelta(seconds=end - start)}')
     filter_data_file.drop(feature_drop, axis=1, inplace=True)
     filter_data_file.to_csv(filter_file, index=False, sep=',')
     return
