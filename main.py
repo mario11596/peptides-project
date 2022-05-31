@@ -3,19 +3,27 @@ import fileCheck as check_file
 import filterFile as fil
 import modelFilter as md
 import modelWrapper as mdWrapper
+import modelWrapperAlt as mdWrapperAlt
 
 if __name__ == '__main__':
      #check_file.check_file()
      #cnv.transform_to_smile()
-     fil.filter_columns_file()
-     fil.data_standardization()
-     fil.unique_value()
-     fil.feature_selection_kendall_model()
+     #fil.filter_columns_file()
+     #fil.statistic_analise()
+     #fil.replacement_missing_value()
+     #fil.data_standardization()
+     #fil.unique_value()
+     #fil.feature_selection_kendall_model()
+
      #md.train_model_catalytic()
-     md.train_model_amp()
+     #md.train_model_amp()
 
      #mdWrapper.train_model_catalytic()
      #mdWrapper.train_model_amp()
+
+     mdWrapperAlt.catalytic_function()
+     #mdWrapperAlt.amp_function()
+
 
 
 

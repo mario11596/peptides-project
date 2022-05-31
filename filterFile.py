@@ -1,15 +1,15 @@
 import configparser
 from datetime import timedelta
 from time import process_time
-
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 from numpy import unique
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from constants import Constants
 from scipy.stats import kendalltau
-
+from sklearn.impute import KNNImputer
+import seaborn as sns
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -17,11 +17,11 @@ config = config['default']
 
 # read output file
 filepath_raw = config['output_location']
-
 filter_file = config['output_location-filter']
 
 # remove all columns which results are overflow
-overflow_columns = ['MDEC-22', 'MDEC-23', 'MDEC-33', 'MDEO-11', 'MDEC-12', 'MDEC-13', 'MDEN-12', 'MDEN-22', 'MDEC-24', 'VSA_EState9']
+overflow_columns = ['MDEC-22', 'MDEC-23', 'MDEC-33', 'MDEO-11', 'MDEC-12', 'MDEC-13', 'MDEN-12', 'MDEN-22', 'MDEC-24',
+                    'VSA_EState9']
 
 
 # check if each columns contains same values, calculation mean values
@@ -34,27 +34,42 @@ def filter_columns_file():
     for each_columns in data_file.loc[:, ~data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]:
         data_file[each_columns].replace('None', np.nan, inplace=True)
 
-        if(data_file[each_columns] == data_file[each_columns][0]).all() or data_file[each_columns].isnull().all():
+        if (data_file[each_columns] == data_file[each_columns][0]).all() or data_file[each_columns].isnull().all():
             constat_column += 1
             data_file.drop(each_columns, axis=1, inplace=True)
 
         elif data_file[each_columns].isnull().any():
             null_to_mean += 1
-            mean_result_with_nan(each_columns, data_file)
+            # mean_result_with_nan(each_columns, data_file)
 
     drop_overflow_columns(data_file)
     data_file.to_csv(filter_file, index=False, sep=',')
     print("Number of columns with same value or null value: " + str(constat_column))
-    print("Number of columns with mean value: " + str(null_to_mean))
+    print("Number of columns with null value: " + str(null_to_mean))
+    return
+
+
+# replace all missing value with KNN algorithm
+def replacement_missing_value():
+    filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
+    all_dataset = filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]
+
+    replacment_value = KNNImputer(n_neighbors=5, weights='uniform', metric='nan_euclidean')
+    new_values = replacment_value.fit_transform(all_dataset)
+    new_dataFrame = pd.DataFrame(new_values, columns=all_dataset.columns)
+    new_concate_frame = pd.concat([filter_data_file['FASTA form'], filter_data_file['SMILE form'], new_dataFrame,
+                                   filter_data_file['result']], axis=1)
+    new_concate_frame.to_csv(filter_file, index=False, sep=',')
     return
 
 
 # calculate mean for columns where the row is found with non-value (Nan)
 def mean_result_with_nan(each_columns, data_file):
-    all_values = data_file[each_columns].values
-    transform_values = np.array(all_values)
-    mean_value = np.nanmean(transform_values, dtype='float64')
-    data_file[each_columns].replace(np.nan, mean_value, inplace=True)
+    # all_values = data_file[each_columns].values
+    # transform_values = np.array(all_values)
+    # mean_value = np.nanmean(transform_values, dtype='float64')
+    # data_file[each_columns].replace(np.nan, mean_value, inplace=True)
+
     return
 
 
@@ -64,7 +79,8 @@ def data_standardization():
 
     for each_columns in filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]:
         all_values_unscale = filter_data_file[each_columns].values
-        scalar = StandardScaler()
+        # scalar = StandardScaler()
+        scalar = MinMaxScaler()
         scaled_data = scalar.fit_transform(all_values_unscale.reshape(-1, 1))
         filter_data_file[each_columns].replace(all_values_unscale, scaled_data, inplace=True)
     filter_data_file.to_csv(filter_file, float_format='%.6f', index=False, sep=',')
@@ -89,11 +105,11 @@ def unique_value():
 
         percentage = (float(number_unique_value) / len(filter_data_file)) * 100
 
-        if(percentage < Constants.LIMIT_UNIQUE):
+        if (percentage < Constants.LIMIT_UNIQUE):
             low_unique_value += 1
             filter_data_file.drop(each_columns, axis=1, inplace=True)
 
-    #drop columns with same value in FASTA form and result
+    # drop columns with same value in FASTA form and result
     same_rows = filter_data_file.duplicated(subset=['FASTA form', 'result']).sum()
     filter_data_file.drop_duplicates(keep='first', subset=['FASTA form', 'result'], inplace=True)
     filter_data_file.to_csv(filter_file, index=False, sep=',')
@@ -106,7 +122,6 @@ def unique_value():
 def feature_selection_kendall_model():
     filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
     all_dataset = filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]
-
     result = filter_data_file["result"].values
 
     feature_drop = []
@@ -122,6 +137,7 @@ def feature_selection_kendall_model():
     for row_keys, row_values in calculate_all_correlation.iterrows():
         index += 1
         for i, (columns_keys, columns_values) in enumerate(row_values.items(), index):
+
             if columns_values >= Constants.CORRELATION_LIMIT:
                 tau1, p_value1 = kendalltau(filter_data_file[columns_keys].values, result)
                 tau2, p_value2 = kendalltau(filter_data_file[row_keys].values, result)
@@ -138,4 +154,44 @@ def feature_selection_kendall_model():
     print(f'Time : {timedelta(seconds=end - start)}')
     filter_data_file.drop(feature_drop, axis=1, inplace=True)
     filter_data_file.to_csv(filter_file, index=False, sep=',')
+    return
+
+
+def probni_graf():
+    filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
+    all_dataset = filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]
+    plt.hist(all_dataset["mZagreb1"], bins='auto', edgecolor="black")
+    plt.savefig('Distribution-mZagreb1 -before-amp.png')
+    plt.close()
+    return
+
+
+def probni_graf1():
+    filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
+    all_dataset = filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]
+    # all_dataset.plot.scatter("ABC", "ABCGG")
+    plt.hist(all_dataset["mZagreb1"], bins='auto', edgecolor="black")
+    plt.savefig('Distribution-mZagreb1 -after-amp.png')
+    plt.close()
+    return
+
+
+def statistic_analise():
+    filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
+    all_dataset = filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]
+
+    skew_value = all_dataset.skew(axis=0)
+    kurtosis_value = all_dataset.kurtosis(axis=0)
+
+    plt.figure(figsize=(10, 8))
+    sns.displot(skew_value, kde=True, bins='auto')
+    plt.ylabel('Frequency')
+    plt.savefig('skewness dataset.png')
+    plt.close()
+
+    plt.figure(figsize=(10, 8))
+    sns.displot(kurtosis_value, kde=True, bins='auto')
+    plt.ylabel('Frequency')
+    plt.savefig('Kurtosis dataset.png')
+    plt.close()
     return
