@@ -1,4 +1,3 @@
-
 class Constants:
     LIMIT_UNIQUE = 10
     CORRELATION_LIMIT = 0.90
@@ -13,3 +12,4 @@ class Constants:
     AMP_FORWARD_NAME = 'AMP_forward'
     CATALYTIC_BACKWARD_NAME = 'catalytic_backward'
     AMP_BACKWARD_NAME = 'AMP_backward'
+    KENDALL_TAU_RANK = 0.3

@@ -40,7 +40,6 @@ def filter_columns_file():
 
         elif data_file[each_columns].isnull().any():
             null_to_mean += 1
-            # mean_result_with_nan(each_columns, data_file)
 
     drop_overflow_columns(data_file)
     data_file.to_csv(filter_file, index=False, sep=',')
@@ -69,7 +68,6 @@ def mean_result_with_nan(each_columns, data_file):
     # transform_values = np.array(all_values)
     # mean_value = np.nanmean(transform_values, dtype='float64')
     # data_file[each_columns].replace(np.nan, mean_value, inplace=True)
-
     return
 
 
@@ -79,7 +77,6 @@ def data_standardization():
 
     for each_columns in filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]:
         all_values_unscale = filter_data_file[each_columns].values
-        # scalar = StandardScaler()
         scalar = MinMaxScaler()
         scaled_data = scalar.fit_transform(all_values_unscale.reshape(-1, 1))
         filter_data_file[each_columns].replace(all_values_unscale, scaled_data, inplace=True)
@@ -87,6 +84,7 @@ def data_standardization():
     return
 
 
+# drop all columns which caused overflow in calculate mordred descriptors
 def drop_overflow_columns(data_file):
     for i in overflow_columns:
         if i in data_file.columns:
@@ -105,7 +103,7 @@ def unique_value():
 
         percentage = (float(number_unique_value) / len(filter_data_file)) * 100
 
-        if (percentage < Constants.LIMIT_UNIQUE):
+        if percentage < Constants.LIMIT_UNIQUE:
             low_unique_value += 1
             filter_data_file.drop(each_columns, axis=1, inplace=True)
 
@@ -157,40 +155,46 @@ def feature_selection_kendall_model():
     return
 
 
-def probni_graf():
+# select and removed features with high Kendall's tau
+def feature_selection_kendall_model_without_corr():
     filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
     all_dataset = filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]
-    plt.hist(all_dataset["mZagreb1"], bins='auto', edgecolor="black")
-    plt.savefig('Distribution-mZagreb1 -before-amp.png')
-    plt.close()
+    result = filter_data_file["result"]
+    feature_drop = []
+
+    start = process_time()
+
+    for each_column in all_dataset.columns:
+        tau, p_value1 = kendalltau(all_dataset[each_column], result)
+
+        if Constants.KENDALL_TAU_RANK > abs(tau):
+            feature_drop.append(str(each_column))
+
+    end = process_time()
+
+    print("Number of removed columns with high correlation is: " + str(len(feature_drop)))
+    print(f'Time : {timedelta(seconds=end - start)}')
+    filter_data_file.drop(feature_drop, axis=1, inplace=True)
+    filter_data_file.to_csv(filter_file, index=False, sep=',')
     return
 
 
-def probni_graf1():
-    filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
-    all_dataset = filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]
-    # all_dataset.plot.scatter("ABC", "ABCGG")
-    plt.hist(all_dataset["mZagreb1"], bins='auto', edgecolor="black")
-    plt.savefig('Distribution-mZagreb1 -after-amp.png')
-    plt.close()
-    return
-
-
+# create statistic graphs (skewness and kurtosis)
 def statistic_analise():
     filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
     all_dataset = filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]
 
-    skew_value = all_dataset.skew(axis=0)
-    kurtosis_value = all_dataset.kurtosis(axis=0)
+    skew_value = all_dataset.skew(axis=0, skipna=True)
 
-    plt.figure(figsize=(10, 8))
-    sns.displot(skew_value, kde=True, bins='auto')
+    plt.figure(figsize=(20, 10), dpi=100)
+    sns.displot(skew_value, kde=True, bins=len(all_dataset.columns))
     plt.ylabel('Frequency')
-    plt.savefig('skewness dataset.png')
+    plt.savefig('Skewness dataset.png')
     plt.close()
 
-    plt.figure(figsize=(10, 8))
-    sns.displot(kurtosis_value, kde=True, bins='auto')
+    kurtosis_value = all_dataset.kurtosis(axis=0, skipna=True)
+    plt.figure(figsize=(20, 10), dpi=100)
+    sns.displot(kurtosis_value, kde=True, bins=len(all_dataset.columns))
     plt.ylabel('Frequency')
     plt.savefig('Kurtosis dataset.png')
     plt.close()

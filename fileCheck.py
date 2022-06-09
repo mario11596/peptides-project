@@ -10,6 +10,7 @@ config = config['default']
 filepath_raw = config['output_location']
 filepath_raw_filter = config['output_location']
 
+
 def make_empty_file():
     transform_data = pd.DataFrame()
     transform_data.to_csv(filepath_raw)
@@ -31,5 +32,4 @@ def check_file():
         print("File does not exists")
 
     make_empty_file()
-
     return
