@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 from numpy import unique
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler
 from constants import Constants
 from scipy.stats import kendalltau
 from sklearn.impute import KNNImputer
@@ -64,10 +64,10 @@ def replacement_missing_value():
 
 # calculate mean for columns where the row is found with non-value (Nan)
 def mean_result_with_nan(each_columns, data_file):
-    # all_values = data_file[each_columns].values
-    # transform_values = np.array(all_values)
-    # mean_value = np.nanmean(transform_values, dtype='float64')
-    # data_file[each_columns].replace(np.nan, mean_value, inplace=True)
+    all_values = data_file[each_columns].values
+    transform_values = np.array(all_values)
+    mean_value = np.nanmean(transform_values, dtype='float64')
+    data_file[each_columns].replace(np.nan, mean_value, inplace=True)
     return
 
 
@@ -106,6 +106,7 @@ def unique_value():
         if percentage < Constants.LIMIT_UNIQUE:
             low_unique_value += 1
             filter_data_file.drop(each_columns, axis=1, inplace=True)
+            print(each_columns)
 
     # drop columns with same value in FASTA form and result
     same_rows = filter_data_file.duplicated(subset=['FASTA form', 'result']).sum()
@@ -149,7 +150,7 @@ def feature_selection_kendall_model():
     feature_drop = list(set(feature_drop))
 
     print("Number of removed columns with high correlation is: " + str(len(feature_drop)))
-    print(f'Time : {timedelta(seconds=end - start)}')
+    print(f'Time Kendall: {timedelta(seconds=end - start)}')
     filter_data_file.drop(feature_drop, axis=1, inplace=True)
     filter_data_file.to_csv(filter_file, index=False, sep=',')
     return
@@ -189,6 +190,7 @@ def statistic_analise():
     plt.figure(figsize=(20, 10), dpi=100)
     sns.displot(skew_value, kde=True, bins=len(all_dataset.columns))
     plt.ylabel('Frequency')
+    plt.xlabel('Measurement')
     plt.savefig('Skewness dataset.png')
     plt.close()
 

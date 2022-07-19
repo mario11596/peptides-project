@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, \
 from sklearn.model_selection import LeaveOneOut, StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier
 from constants import Constants
-from time import process_time
+from time import process_time, time
 from datetime import timedelta
 import seaborn as sns
 from sklearn.calibration import calibration_curve
@@ -32,7 +32,7 @@ def train_model_catalytic():
 
     model = RandomForestClassifier(n_estimators=Constants.N_ESTIMATORS, max_features=Constants.MAX_FEATURES,
                                    min_samples_leaf=Constants.MIN_SAMPLES_LEAF, random_state=50)
-    start = process_time()
+    start = time()
     for train_index, test_index in loo_data.split(all_data_feature):
         X_train, X_test = all_data_feature.iloc[train_index, :], all_data_feature.iloc[test_index, :]
         y_train, y_test = target.iloc[train_index], target.iloc[test_index]
@@ -45,7 +45,7 @@ def train_model_catalytic():
         # the predicted probabilities for positive
         probability_target_positive.extend(model.predict_proba(X_test)[:, 1])
 
-    end = process_time()
+    end = time()
     confusion_matrix_values = confusion_matrix(target_results, prediction_results)
     accuracy_result = accuracy_score(target_results, prediction_results)
     precision_result = precision_score(target_results, prediction_results)
@@ -83,7 +83,7 @@ def train_model_amp():
     model = RandomForestClassifier(n_estimators=Constants.N_ESTIMATORS, max_features=Constants.MAX_FEATURES,
                                    min_samples_leaf=Constants.MIN_SAMPLES_LEAF, random_state=50)
 
-    start = process_time()
+    start = time()
     for train_index, test_index in ten_fold_cv.split(all_data_feature, target):
         X_train, X_test = all_data_feature.iloc[train_index, :], all_data_feature.iloc[test_index, :]
         y_train, y_test = target.iloc[train_index], target.iloc[test_index]
@@ -97,7 +97,7 @@ def train_model_amp():
         # the predicted probabilities for positive
         probability_target_positive.extend(model.predict_proba(X_test)[:, 1])
 
-    end = process_time()
+    end = time()
     confusion_matrix_values = confusion_matrix(target_results, prediction_results)
     accuracy_result = accuracy_score(target_results, prediction_results)
     precision_result = precision_score(target_results, prediction_results)
@@ -160,6 +160,7 @@ def feature_importance(feature_values_importances, columns_name, name):
 
     sns.barplot(x=data_important_feature['feature_importance'], y=data_important_feature['feature_names'], color='blue')
     plt.title('Feature importance in Random Forest')
+    plt.ylabel('Feature name')
     plt.xlabel('Importance')
     plt.savefig('Feature-importances-{}.png'.format(name))
     plt.close()
@@ -169,7 +170,7 @@ def feature_importance(feature_values_importances, columns_name, name):
 # create calibration curve on graph
 def calibration_score_display(target_results, probability_target_positive, name):
     plt.figure()
-    fop, mpv = calibration_curve(target_results, probability_target_positive, n_bins=49, normalize=True)
+    fop, mpv = calibration_curve(target_results, probability_target_positive, n_bins=20, normalize=True)
     plt.plot([0, 1], [0, 1], linestyle='--')
     plt.plot(mpv, fop, marker='.', label='Random Forest')
     plt.title('Probability calibration Random Forest')

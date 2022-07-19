@@ -2,9 +2,7 @@ import convert as cnv
 import fileCheck as check_file
 import filterFile as fil
 import modelFilter as md
-import modelWrapper as mdWrapper
 import modelWrapperAlt as mdWrapperAlt
-
 
 if __name__ == '__main__':
     check_file.check_file()
@@ -19,9 +17,6 @@ if __name__ == '__main__':
 
     md.train_model_catalytic()
     md.train_model_amp()
-
-    mdWrapper.train_model_catalytic()
-    mdWrapper.train_model_amp()
 
     mdWrapperAlt.catalytic_function()
     mdWrapperAlt.amp_function()
