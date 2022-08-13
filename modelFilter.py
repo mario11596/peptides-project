@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, \
 from sklearn.model_selection import LeaveOneOut, StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier
 from constants import Constants
-from time import process_time, time
+from time import time
 from datetime import timedelta
 import seaborn as sns
 from sklearn.calibration import calibration_curve
@@ -149,7 +149,7 @@ def matrix_display(confusion_matrix_values, name):
     return
 
 
-# create graphs with features importance in decreasing order
+# create graphs with first 50 features importance in decreasing order
 def feature_importance(feature_values_importances, columns_name, name):
     data = {'feature_names': columns_name, 'feature_importance': feature_values_importances}
     data_important_feature = pd.DataFrame(data)

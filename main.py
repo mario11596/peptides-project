@@ -1,7 +1,7 @@
 import convert as cnv
 import fileCheck as check_file
 import filterFile as fil
-import modelFilter as md
+import modelFilter as mdFilter
 import modelWrapperAlt as mdWrapperAlt
 
 if __name__ == '__main__':
@@ -15,8 +15,8 @@ if __name__ == '__main__':
     fil.feature_selection_kendall_model()
     fil.feature_selection_kendall_model_without_corr()
 
-    md.train_model_catalytic()
-    md.train_model_amp()
+    mdFilter.train_model_catalytic()
+    mdFilter.train_model_amp()
 
     mdWrapperAlt.catalytic_function()
     mdWrapperAlt.amp_function()

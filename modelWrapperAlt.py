@@ -81,12 +81,15 @@ def forward_selection(all_data_feature, target, name):
     feature_name = []
     feature_subset = []
 
+    # temporary variable for algorithm optimization
     tmp_all_data_feature = all_data_feature
 
     start_time = time()
 
+    # number of threads for usage HPC
     pool = multiprocessing.Pool(processes=48)
 
+    # termination condition
     while len(feature_name) < len(all_data_feature.columns):
         train_feature_metrics.clear()
 
@@ -104,12 +107,13 @@ def forward_selection(all_data_feature, target, name):
         print(str(best_result[0]) + ' ' + str(best_result[1]) + ' ' + str(len(feature_name)))
 
     end_time = time()
-    new_data_feature = all_data_feature.loc[:, dataFile.amp_forward_dataset]
     print(f'Time for forward feature selection: {timedelta(seconds=end_time - start_time)}')
+    new_data_feature = all_data_feature.loc[:, dataFile.amp_forward_dataset]
 
+    # plot F1 scores for 250 and all features
     plot_feature_score(feature_score[0:250], name)
     plot_feature_score_all(feature_score, name)
-    # train_model_catalytic(new_data_feature, target, name)
+    #train_model_catalytic(new_data_feature, target, name)
     return
 
 
@@ -120,12 +124,15 @@ def backward_selection(all_data_feature, target, name):
     feature_drop = []
     feature_score = []
 
+    # temporary variable for algorithm optimization
     tmp_all_data_feature = all_data_feature
 
     start_time = time()
 
+    # number of threads for usage HPC
     pool = multiprocessing.Pool(processes=48)
 
+    # termination condition
     count = len(all_data_feature.columns)
 
     while count > 1:
@@ -143,9 +150,10 @@ def backward_selection(all_data_feature, target, name):
         print(str(best_result[0]) + ' ' + str(best_result[1]) + ' ' + str(len(tmp_all_data_feature.columns)))
 
     end_time = time()
-    new_data_feature = all_data_feature.loc[:, ~all_data_feature.columns.isin(feature_drop)]
     print(f'Time for forward feature selection: {timedelta(seconds=end_time - start_time)}')
+    new_data_feature = all_data_feature.loc[:, ~all_data_feature.columns.isin(feature_drop)]
 
+    # plot F1 scores for 250 and all features
     plot_feature_score_all(feature_score, name)
     plot_feature_score(feature_score[900:1150], name)
     # train_model_catalytic(new_data_feature, target, name)
@@ -155,7 +163,6 @@ def backward_selection(all_data_feature, target, name):
 # machine learning for catalytic peptides
 def train_model_catalytic(new_data_feature, target, name):
     all_data_feature = new_data_feature
-    target = target
     print(new_data_feature.shape)
 
     loo_data = LeaveOneOut()
@@ -209,7 +216,7 @@ def train_model_catalytic(new_data_feature, target, name):
 # machine learning for AMP (DRAMP 2) peptides
 def train_model_amp(new_data_feature, target, name):
     all_data_feature = new_data_feature
-    target = target
+    print(new_data_feature.shape)
 
     ten_fold_cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=10)
     prediction_results = []
@@ -349,9 +356,9 @@ def plot_feature_score_all(feature_score, name):
     return
 
 
-# evaluate model for feature selection after each add feature
+# evaluate model using Gaussian Naive Bayes for feature selection after each add feature
 def evaluate_model_forward(feature, list_feature):
-    ten_fold_cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=10)
+    ten_fold_cv = StratifiedKFold(n_splits=4, shuffle=True, random_state=10)
     f1_average = []
 
     target = filter_data_file_global["result"]
@@ -375,7 +382,7 @@ def evaluate_model_forward(feature, list_feature):
     return feature, f1_result_cv
 
 
-# evaluate model for feature selection after each drop feature
+# evaluate model using Decision Tree for feature selection after each drop feature
 def evaluate_model_backward(feature, list_feature):
     ten_fold_cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=10)
     f1_average = []
@@ -398,6 +405,5 @@ def evaluate_model_backward(feature, list_feature):
         f1_average.append(f1_result)
 
     f1_result_cv = mean(f1_average)
-    print(f1_result_cv)
     return feature, f1_result_cv
 

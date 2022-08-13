@@ -48,7 +48,7 @@ def filter_columns_file():
     return
 
 
-# replace all missing value with KNN algorithm
+# replace all missing values with k-NN algorithm
 def replacement_missing_value():
     filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
     all_dataset = filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]
@@ -128,6 +128,7 @@ def feature_selection_kendall_model():
 
     start = process_time()
 
+    # values above the main diagonal
     calculate_all_correlation.values[np.tril_indices_from(calculate_all_correlation.values)] = np.nan
     print(calculate_all_correlation)
 
@@ -188,7 +189,7 @@ def statistic_analise():
     skew_value = all_dataset.skew(axis=0, skipna=True)
 
     plt.figure(figsize=(20, 10), dpi=100)
-    sns.displot(skew_value, kde=True, bins=len(all_dataset.columns))
+    sns.displot(skew_value, kde=True, bins=10)
     plt.ylabel('Frequency')
     plt.xlabel('Measurement')
     plt.savefig('Skewness dataset.png')
@@ -196,7 +197,7 @@ def statistic_analise():
 
     kurtosis_value = all_dataset.kurtosis(axis=0, skipna=True)
     plt.figure(figsize=(20, 10), dpi=100)
-    sns.displot(kurtosis_value, kde=True, bins=len(all_dataset.columns))
+    sns.displot(kurtosis_value, kde=True, bins=10)
     plt.ylabel('Frequency')
     plt.savefig('Kurtosis dataset.png')
     plt.close()

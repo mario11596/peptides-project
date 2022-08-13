@@ -13,7 +13,7 @@ filepath_raw = config['peptides_filepath_raw']
 header = [Constants.SEQUENCES, Constants.LABELS]
 data_file = pd.read_csv(filepath_or_buffer=filepath_raw, header=0, delimiter=',')
 
-# file with peptides in SMILE annotation, prepared all columns
+# file with peptides in SMILES annotation, prepared all columns
 output_raw = config['output_location']
 
 

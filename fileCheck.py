@@ -6,7 +6,7 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 config = config['default']
 
-# check if file exists and delete
+# check if file exists and  if does than delete it
 filepath_raw = config['output_location']
 filepath_raw_filter = config['output_location']
 
