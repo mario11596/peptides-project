@@ -62,7 +62,7 @@ def replacement_missing_value():
     return
 
 
-# calculate mean for columns where the row is found with non-value (Nan)
+# calculate mean for columns where the row is found with non-value (NaN)
 def mean_result_with_nan(each_columns, data_file):
     all_values = data_file[each_columns].values
     transform_values = np.array(all_values)
@@ -183,22 +183,32 @@ def feature_selection_kendall_model_without_corr():
 
 # create statistic graphs (skewness and kurtosis)
 def statistic_analise():
-    filter_data_file = pd.read_csv(filepath_or_buffer=filter_file, delimiter=',')
+    filter_data_file = pd.read_csv(filepath_or_buffer=filepath_raw, delimiter=',', low_memory=False)
     all_dataset = filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]
 
     skew_value = all_dataset.skew(axis=0, skipna=True)
+    plt.figure()
 
-    plt.figure(figsize=(20, 10), dpi=100)
-    sns.displot(skew_value, kde=True, bins=10)
-    plt.ylabel('Frequency')
-    plt.xlabel('Measurement')
+    sns.displot(skew_value, kde=True, linewidth=1)
+
+    plt.xticks(ticks=np.arange(-3, 6, 1))
+    plt.xlim(-3, 6)
+    plt.ylabel('Frekvencija', fontsize=12)
+    plt.xlabel('Vrijednosti asimetrije', fontsize=12)
+    plt.tight_layout()
     plt.savefig('Skewness dataset.png')
     plt.close()
 
     kurtosis_value = all_dataset.kurtosis(axis=0, skipna=True)
-    plt.figure(figsize=(20, 10), dpi=100)
-    sns.displot(kurtosis_value, kde=True, bins=10)
-    plt.ylabel('Frequency')
+    plt.figure()
+
+    sns.displot(kurtosis_value, kde=True, linewidth=1)
+
+    plt.xticks(ticks=np.arange(0, 15, 1))
+    plt.xlim(0, 15)
+    plt.ylabel('Frekvencija', fontsize=12)
+    plt.xlabel('Vrijednosti spljoštenosti', fontsize=12)
+    plt.tight_layout()
     plt.savefig('Kurtosis dataset.png')
     plt.close()
     return
