@@ -43,9 +43,9 @@ def catalytic_function():
 
     # previous selected the best features
     new_forward_data_feature = all_data_feature.loc[:, all_data_feature.columns.isin(
-        selectedDataWrapper.catalytic_forward_dataset)]
+        selectedDataWrapper.catalytic_forward_dataset_new)]
     new_backward_data_feature = all_data_feature.loc[:, all_data_feature.columns.isin(
-        selectedDataWrapper.catalytic_backward_dataset)]
+        selectedDataWrapper.catalytic_backward_dataset_new)]
 
     train_model_catalytic(new_forward_data_feature, target,  Constants.CATALYTIC_FORWARD_NAME)
     train_model_catalytic(new_backward_data_feature, target, Constants.CATALYTIC_BACKWARD_NAME)
@@ -406,4 +406,3 @@ def evaluate_model_backward(feature, list_feature):
 
     f1_result_cv = mean(f1_average)
     return feature, f1_result_cv
-
