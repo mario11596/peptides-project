@@ -8,7 +8,6 @@ if __name__ == '__main__':
     check_file.check_file()
     cnv.transform_to_smile()
     fil.filter_columns_file()
-    fil.statistic_analise()
     fil.replacement_missing_value()
     fil.data_standardization()
     fil.unique_value()

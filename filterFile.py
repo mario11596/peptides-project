@@ -3,13 +3,11 @@ from datetime import timedelta
 from time import process_time
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
 from numpy import unique
 from sklearn.preprocessing import MinMaxScaler
 from constants import Constants
 from scipy.stats import kendalltau
 from sklearn.impute import KNNImputer
-import seaborn as sns
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -178,37 +176,4 @@ def feature_selection_kendall_model_without_corr():
     print(f'Time : {timedelta(seconds=end - start)}')
     filter_data_file.drop(feature_drop, axis=1, inplace=True)
     filter_data_file.to_csv(filter_file, index=False, sep=',')
-    return
-
-
-# create statistic graphs (skewness and kurtosis)
-def statistic_analise():
-    filter_data_file = pd.read_csv(filepath_or_buffer=filepath_raw, delimiter=',', low_memory=False)
-    all_dataset = filter_data_file.loc[:, ~filter_data_file.columns.isin(['FASTA form', 'SMILE form', 'result'])]
-
-    skew_value = all_dataset.skew(axis=0, skipna=True)
-    plt.figure()
-
-    sns.displot(skew_value, kde=True, linewidth=1)
-
-    plt.xticks(ticks=np.arange(-3, 6, 1))
-    plt.xlim(-3, 6)
-    plt.ylabel('Frekvencija', fontsize=12)
-    plt.xlabel('Vrijednosti asimetrije', fontsize=12)
-    plt.tight_layout()
-    plt.savefig('Skewness dataset.png')
-    plt.close()
-
-    kurtosis_value = all_dataset.kurtosis(axis=0, skipna=True)
-    plt.figure()
-
-    sns.displot(kurtosis_value, kde=True, linewidth=1)
-
-    plt.xticks(ticks=np.arange(0, 15, 1))
-    plt.xlim(0, 15)
-    plt.ylabel('Frekvencija', fontsize=12)
-    plt.xlabel('Vrijednosti spljoštenosti', fontsize=12)
-    plt.tight_layout()
-    plt.savefig('Kurtosis dataset.png')
-    plt.close()
     return

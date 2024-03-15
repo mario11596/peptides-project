@@ -3,7 +3,6 @@ from statistics import mean
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from sklearn.calibration import calibration_curve
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import LeaveOneOut, StratifiedKFold
 from sklearn.metrics import confusion_matrix, \
@@ -110,10 +109,10 @@ def forward_selection(all_data_feature, target, name):
     print(f'Time for forward feature selection: {timedelta(seconds=end_time - start_time)}')
     new_data_feature = all_data_feature.loc[:, dataFile.amp_forward_dataset]
 
-    # plot F1 scores for 250 and all features
+    # plot F1 scores for first 250 and all features
     plot_feature_score(feature_score[0:250], name)
     plot_feature_score_all(feature_score, name)
-    #train_model_catalytic(new_data_feature, target, name)
+    train_model_catalytic(new_data_feature, target, name)
     return
 
 
@@ -153,10 +152,12 @@ def backward_selection(all_data_feature, target, name):
     print(f'Time for forward feature selection: {timedelta(seconds=end_time - start_time)}')
     new_data_feature = all_data_feature.loc[:, ~all_data_feature.columns.isin(feature_drop)]
 
-    # plot F1 scores for 250 and all features
+    # plot F1 scores for last 250 and all features
     plot_feature_score_all(feature_score, name)
+
+    #last number depends about dataset
     plot_feature_score(feature_score[900:1150], name)
-    # train_model_catalytic(new_data_feature, target, name)
+    train_model_catalytic(new_data_feature, target, name)
     return
 
 
@@ -209,14 +210,12 @@ def train_model_catalytic(new_data_feature, target, name):
     roc_auc_curve_display(probability_target_positive, target_results, name)
     matrix_display(confusion_matrix_values, name)
     feature_importance(model.feature_importances_, all_data_feature.columns, name)
-    accuracy_score_display(target_results, probability_target_positive, name)
     return
 
 
 # machine learning for AMP (DRAMP 2) peptides
 def train_model_amp(new_data_feature, target, name):
     all_data_feature = new_data_feature
-    print(new_data_feature.shape)
 
     ten_fold_cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=10)
     prediction_results = []
@@ -259,7 +258,6 @@ def train_model_amp(new_data_feature, target, name):
     roc_auc_curve_display(probability_target_positive, target_results, name)
     matrix_display(confusion_matrix_values, name)
     feature_importance(model.feature_importances_, all_data_feature.columns, name)
-    accuracy_score_display(target_results, probability_target_positive, name)
     return
 
 
@@ -305,21 +303,6 @@ def feature_importance(feature_values_importances, columns_name, name):
     plt.ylabel('Feature name')
     plt.xlabel('Importance')
     plt.savefig('Feature-importances-{}.png'.format(name))
-    plt.close()
-    return
-
-
-# create calibration curve on graph
-def accuracy_score_display(target_results, probability_target_positive, name):
-    plt.figure()
-    fop, mpv = calibration_curve(target_results, probability_target_positive, n_bins=20, normalize=True)
-    plt.plot([0, 1], [0, 1], linestyle='--')
-    plt.plot(mpv, fop, marker='.', label='Random Forest')
-    plt.title('Probability calibration Random Forest')
-    plt.ylabel('Fraction of positives')
-    plt.xlabel('Mean predicted value')
-    plt.legend()
-    plt.savefig('Calibration-{}.png'.format(name))
     plt.close()
     return
 

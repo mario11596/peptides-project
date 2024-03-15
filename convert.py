@@ -8,7 +8,7 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 config = config['default']
 
-# input original file
+# input original file (need to be change for AMP or catalytic)
 filepath_raw = config['peptides_filepath_raw']
 header = [Constants.SEQUENCES, Constants.LABELS]
 data_file = pd.read_csv(filepath_or_buffer=filepath_raw, header=0, delimiter=',')
